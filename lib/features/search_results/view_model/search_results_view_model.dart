@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../model/search_results_model.dart';
 import '../../../core/services/hotel_api_service.dart';
-import '../../../core/models/hotel.dart';
 
 class SearchResultsViewModel extends ChangeNotifier {
   SearchResultsModel _model = const SearchResultsModel();

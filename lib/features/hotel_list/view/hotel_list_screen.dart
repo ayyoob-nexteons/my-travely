@@ -7,7 +7,6 @@ import '../../../core/navigation/navigation_utils.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../core/utils/app_text_styles.dart';
 import '../../../core/models/hotel.dart';
-import '../../../core/utils/formatters.dart';
 
 class HotelListScreen extends StatefulWidget {
   const HotelListScreen({super.key});
@@ -192,7 +191,7 @@ class _HotelListScreenState extends State<HotelListScreen> {
       child: InkWell(
         onTap: () {
           // Navigate to hotel details or search results
-          NavigationUtils.goToSearchResults(context, hotel.name);
+          NavigationUtils.goToSearchResults(context, hotel.propertyName);
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -203,9 +202,9 @@ class _HotelListScreenState extends State<HotelListScreen> {
               // Hotel Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: hotel.imageUrl.isNotEmpty
+                child: hotel.propertyImage.isNotEmpty
                     ? Image.network(
-                        hotel.imageUrl,
+                        hotel.propertyImage,
                         height: 200,
                         width: double.infinity,
                         fit: BoxFit.cover,
@@ -238,7 +237,7 @@ class _HotelListScreenState extends State<HotelListScreen> {
               
               // Hotel Name
               Text(
-                hotel.name,
+                hotel.propertyName,
                 style: AppTextStyles.titleMedium.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -277,33 +276,34 @@ class _HotelListScreenState extends State<HotelListScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Rating
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.star,
-                        size: 16,
-                        color: Colors.amber,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        hotel.rating.toStringAsFixed(1),
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w500,
+                  if (hotel.reviewPresent && hotel.overallRating != null)
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.star,
+                          size: 16,
+                          color: Colors.amber,
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '(${hotel.reviewCount} reviews)',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                        const SizedBox(width: 4),
+                        Text(
+                          hotel.overallRating!.toStringAsFixed(1),
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '(${hotel.totalUserRating ?? 0} reviews)',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   
                   // Price
                   Text(
-                    AppFormatters.formatCurrency(hotel.price),
+                    hotel.staticPriceDisplay,
                     style: AppTextStyles.titleMedium.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,
@@ -315,29 +315,37 @@ class _HotelListScreenState extends State<HotelListScreen> {
               const SizedBox(height: 8),
               
               // Amenities
-              if (hotel.amenities.isNotEmpty)
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: hotel.amenities.take(3).map((amenity) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        amenity,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  if (hotel.freeWifi)
+                    _buildAmenityChip('Free WiFi'),
+                  if (hotel.freeCancellation)
+                    _buildAmenityChip('Free Cancellation'),
+                  if (hotel.coupleFriendly)
+                    _buildAmenityChip('Couple Friendly'),
+                ],
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAmenityChip(String amenity) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        amenity,
+        style: AppTextStyles.bodySmall.copyWith(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );

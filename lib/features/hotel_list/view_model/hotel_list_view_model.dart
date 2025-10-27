@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../model/hotel_list_model.dart';
 import '../../../core/navigation/navigation_utils.dart';
 import '../../../core/services/hotel_api_service.dart';
-import '../../../core/models/hotel.dart';
 import '../../../core/storage/local_storage_service.dart';
 
 class HotelListViewModel extends ChangeNotifier {

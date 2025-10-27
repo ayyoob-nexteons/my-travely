@@ -6,7 +6,6 @@ import '../../../core/navigation/navigation_utils.dart';
 import '../../../core/utils/app_colors.dart';
 import '../../../core/utils/app_text_styles.dart';
 import '../../../core/models/hotel.dart';
-import '../../../core/utils/formatters.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String searchQuery;
@@ -188,9 +187,9 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               // Hotel Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: hotel.imageUrl.isNotEmpty
+                child: hotel.propertyImage.isNotEmpty
                     ? Image.network(
-                        hotel.imageUrl,
+                        hotel.propertyImage,
                         height: 200,
                         width: double.infinity,
                         fit: BoxFit.cover,
@@ -223,7 +222,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               
               // Hotel Name
               Text(
-                hotel.name,
+                hotel.propertyName,
                 style: AppTextStyles.titleMedium.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -257,17 +256,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               
               const SizedBox(height: 8),
               
-              // Description
-              if (hotel.description.isNotEmpty)
-                Text(
-                  hotel.description,
-                  style: AppTextStyles.bodyMedium,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              
-              const SizedBox(height: 8),
-              
               // Rating and Price
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -281,15 +269,15 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                         color: Colors.amber,
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        hotel.rating.toStringAsFixed(1),
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w500,
+                        Text(
+                          hotel.overallRating?.toStringAsFixed(1) ?? '0.0',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
                       const SizedBox(width: 4),
                       Text(
-                        '(${hotel.reviewCount} reviews)',
+                        '(${hotel.totalUserRating} reviews)',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -299,7 +287,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                   
                   // Price
                   Text(
-                    AppFormatters.formatCurrency(hotel.price),
+                    hotel.staticPriceDisplay,
                     style: AppTextStyles.titleMedium.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,
@@ -398,9 +386,9 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 // Hotel Image
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: hotel.imageUrl.isNotEmpty
+                  child: hotel.propertyImage.isNotEmpty
                       ? Image.network(
-                          hotel.imageUrl,
+                          hotel.propertyImage,
                           height: 200,
                           width: double.infinity,
                           fit: BoxFit.cover,
@@ -433,7 +421,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 
                 // Hotel Name
                 Text(
-                  hotel.name,
+                  hotel.propertyName,
                   style: AppTextStyles.headlineSmall.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -476,14 +464,14 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          hotel.rating.toStringAsFixed(1),
+                          hotel.overallRating?.toStringAsFixed(1) ?? '0.0',
                           style: AppTextStyles.titleMedium.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '(${hotel.reviewCount} reviews)',
+                          '(${hotel.totalUserRating} reviews)',
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.textSecondary,
                           ),
@@ -491,7 +479,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                       ],
                     ),
                     Text(
-                      AppFormatters.formatCurrency(hotel.price),
+                      hotel.staticPriceDisplay,
                       style: AppTextStyles.headlineSmall.copyWith(
                         fontWeight: FontWeight.bold,
                         color: AppColors.primary,
@@ -501,22 +489,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 ),
                 
                 const SizedBox(height: 20),
-                
-                // Description
-                if (hotel.description.isNotEmpty) ...[
-                  Text(
-                    'Description',
-                    style: AppTextStyles.titleMedium.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    hotel.description,
-                    style: AppTextStyles.bodyMedium,
-                  ),
-                  const SizedBox(height: 20),
-                ],
                 
                 // Amenities
                 if (hotel.amenities.isNotEmpty) ...[
@@ -552,44 +524,43 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 
                 // Contact Info
                 Text(
-                  'Contact Information',
+                  'Property Information',
                   style: AppTextStyles.titleMedium.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
-                if (hotel.phoneNumber.isNotEmpty)
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.phone,
-                        size: 20,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        hotel.phoneNumber,
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      size: 20,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${hotel.street}, ${hotel.city}, ${hotel.state} ${hotel.zipcode}',
                         style: AppTextStyles.bodyMedium,
                       ),
-                    ],
-                  ),
-                if (hotel.email.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.email,
-                        size: 20,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        hotel.email,
-                        style: AppTextStyles.bodyMedium,
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.star,
+                      size: 20,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${hotel.propertyStar} Star ${hotel.propertyType}',
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                  ],
+                ),
                 
                 const SizedBox(height: 20),
                 
@@ -613,12 +584,12 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Book ${hotel.name}'),
+        title: Text('Book ${hotel.propertyName}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Price: ${AppFormatters.formatCurrency(hotel.price)}'),
+            Text('Price: ${hotel.staticPriceDisplay}'),
             const SizedBox(height: 8),
             Text('Location: ${hotel.city}, ${hotel.state}'),
             const SizedBox(height: 16),
@@ -641,7 +612,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Booking confirmed for ${hotel.name}!'),
+                  content: Text('Booking confirmed for ${hotel.propertyName}!'),
                   backgroundColor: AppColors.success,
                 ),
               );
