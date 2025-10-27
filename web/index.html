@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- Google Sign-In Configuration -->
+  <meta name="google-signin-client_id" content="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com">
+  
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="my_travely">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>my_travely</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    .google-signin-button {
+      width: 100%;
+      height: 50px;
+      border-radius: 12px;
+      border: 2px solid #4285F4;
+      background: transparent;
+      color: #4285F4;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .google-signin-button:hover {
+      background-color: #4285F4;
+      color: white;
+    }
+    
+    .google-signin-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+  
+  <script>
+    let googleCredential = null;
+    let isGoogleInitialized = false;
+
+    // Initialize Google Identity Services
+    function initializeGoogleSignIn(clientId, buttonId) {
+      if (isGoogleInitialized) return;
+      
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+      
+      isGoogleInitialized = true;
+      console.log('Google Sign-In initialized');
+    }
+
+    // Handle credential response
+    function handleCredentialResponse(response) {
+      console.log('Google Sign-In response received');
+      
+      // Decode the JWT token to get user info
+      const payload = JSON.parse(atob(response.credential.split('.')[1]));
+      
+      googleCredential = {
+        credential: response.credential,
+        email: payload.email,
+        name: payload.name,
+        picture: payload.picture,
+        sub: payload.sub
+      };
+      
+      // Notify Flutter
+      if (window.flutter_inappwebview) {
+        window.flutter_inappwebview.callHandler('onGoogleSignInSuccess', googleCredential);
+      } else {
+        // For regular web
+        window.dispatchEvent(new CustomEvent('googleSignInSuccess', {
+          detail: googleCredential
+        }));
+      }
+    }
+
+    // Sign in function
+    function signInWithGoogle() {
+      if (!isGoogleInitialized) {
+        console.error('Google Sign-In not initialized');
+        return Promise.reject('Google Sign-In not initialized');
+      }
+      
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject('Sign-in timeout');
+        }, 30000);
+        
+        const handleSuccess = (event) => {
+          clearTimeout(timeout);
+          window.removeEventListener('googleSignInSuccess', handleSuccess);
+          resolve(event.detail);
+        };
+        
+        const handleError = (event) => {
+          clearTimeout(timeout);
+          window.removeEventListener('googleSignInError', handleError);
+          reject(event.detail);
+        };
+        
+        window.addEventListener('googleSignInSuccess', handleSuccess);
+        window.addEventListener('googleSignInError', handleError);
+        
+        // Trigger Google Sign-In
+        google.accounts.id.prompt();
+      });
+    }
+
+    // Sign out function
+    function signOutGoogle() {
+      googleCredential = null;
+      google.accounts.id.disableAutoSelect();
+      console.log('Google Sign-In signed out');
+    }
+
+    // Check if signed in
+    function isGoogleSignedIn() {
+      return googleCredential !== null;
+    }
+
+    // Initialize dartInterop object immediately
+    if (typeof window.dartInterop === 'undefined') {
+      window.dartInterop = {};
+    }
+
+    // Make functions globally available
+    window.initializeGoogleSignIn = initializeGoogleSignIn;
+    window.signInWithGoogle = signInWithGoogle;
+    window.signOutGoogle = signOutGoogle;
+    window.isGoogleSignedIn = isGoogleSignedIn;
+
+    // Expose functions to Dart context
+    window.dartInterop.signInWithGoogle = signInWithGoogle;
+    window.dartInterop.signOutGoogle = signOutGoogle;
+    window.dartInterop.isGoogleSignedIn = isGoogleSignedIn;
+    window.dartInterop.initializeGoogleSignIn = initializeGoogleSignIn;
+
+    // Add a ready flag to indicate initialization is complete
+    window.dartInterop.ready = true;
+
+    // Auto-initialize when Google Identity Services loads
+    window.addEventListener('load', () => {
+      console.log('Window loaded, checking for Google Identity Services...');
+      if (typeof google !== 'undefined' && google.accounts) {
+        console.log('Google Identity Services found, initializing...');
+        initializeGoogleSignIn('YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com', 'google-signin-button');
+      } else {
+        console.log('Google Identity Services not found, retrying in 1 second...');
+        setTimeout(() => {
+          if (typeof google !== 'undefined' && google.accounts) {
+            console.log('Google Identity Services found on retry, initializing...');
+            initializeGoogleSignIn('YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com', 'google-signin-button');
+          } else {
+            console.error('Google Identity Services not available');
+          }
+        }, 1000);
+      }
+    });
+
+    // Also try to initialize when Google Identity Services loads
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded, checking for Google Identity Services...');
+      if (typeof google !== 'undefined' && google.accounts) {
+        console.log('Google Identity Services found on DOM load, initializing...');
+        initializeGoogleSignIn('YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com', 'google-signin-button');
+      }
+    });
+  </script>
+</body>
+</html>
